@@ -1,5 +1,13 @@
 # ASP.NET Core PDFSharp
 
+
+## ASP.NET Core 2.2
+
+**NOTE: It appears that as of ASP.NET Core 2.2, PDFSharp (for .NET 4.6.1) simply works and none of this is required any longer. Just add the PDFSharp Nuget package to your project. Done. (It's great when Microsoft catches up with the promises made with ASP.NET Core/NETStandard.)**
+
+
+
+
 So I really needed PDFSharp for netcoreapp2.0 (or netstandard2.0), but the current release version 1.32.3057 and the prerelease version 1.50.4845-RC2a 
 did not support ASP.NET Core, nor would they magically work.
 
