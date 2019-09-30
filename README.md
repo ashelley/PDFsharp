@@ -5,7 +5,8 @@
 
 **NOTE: It appears that as of ASP.NET Core 2.2, PDFSharp (for .NET 4.6.1) simply works and none of this is required any longer. Just add the PDFSharp Nuget package to your project. Done. (It's great when Microsoft catches up with the promises made with ASP.NET Core/NETStandard.)**
 
-
+**UPDATE 9/29/2019** PDFSharp .NET 4.6.1 only works with ASP.NET Core 2.2 on Windows "out of the box". On Linux or a Linux Docker container, it does not work. At this point I give up as this is a minor part of my app and I can just display the invoice as a simple (HTML) page. The error on Linux is "Unable to load shared library 'user32.dll' or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: libuser32.dll: cannot open shared object file: No such file or directory". 
+Using the PDFsharp-.netcoreapp2.0 might actually work on Linux, but I'm tired of chasing workarounds, so I'll just go with the plain HTML page (for invoices).
 
 
 So I really needed PDFSharp for netcoreapp2.0 (or netstandard2.0), but the current release version 1.32.3057 and the prerelease version 1.50.4845-RC2a 
