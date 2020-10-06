@@ -35,6 +35,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf.Advanced
 {
     /// <summary>
@@ -108,6 +112,13 @@ namespace PdfSharp.Pdf.Advanced
         {
             writer.Write(this);
         }
+
+#if (NETFX_CORE || CORE)
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.Write(this);
+        }
+#endif
 
         /// <summary>
         /// Gets or sets the object identifier.

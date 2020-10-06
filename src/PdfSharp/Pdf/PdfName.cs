@@ -32,6 +32,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -131,6 +135,17 @@ namespace PdfSharp.Pdf
             // TODO: what if unicode character are part of the name? 
             writer.Write(this);
         }
+
+#if (NETFX_CORE || CORE)
+        /// <summary>
+        /// Writes the name including the leading slash.
+        /// </summary>
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            // TODO: what if unicode character are part of the name? 
+            await writer.Write(this);
+        }
+#endif
 
         /// <summary>
         /// Gets the comparer for this type.

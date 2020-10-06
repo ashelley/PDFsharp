@@ -32,6 +32,10 @@ using System.Diagnostics;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -219,6 +223,29 @@ namespace PdfSharp.Pdf
             //}
             //return null;
         }
+
+#if (true && (NETFX_CORE || CORE))
+        /// <summary>
+        /// Saves the stream position. 2nd Edition.
+        /// </summary>
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            throw new Exception("test");
+            Debug.Assert(false, "Must not come here!");
+            //Debug.Assert(_inStreamOffset <= 0);
+            //if (_inStreamOffset == 0)
+            //{
+            //    //_InStreamOffset = stream.Position;
+            //    _document.xrefTable.AddObject(this);
+            //    return Format("{0} {1} obj\n", _objectID, _generation);
+            //}
+            //else if (_inStreamOffset == -1)
+            //{
+            //}
+            //return null;
+        }
+#endif
+
 
         /// <summary>
         /// Gets the object identifier. Returns PdfObjectID.Empty for direct objects,

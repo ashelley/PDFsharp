@@ -31,6 +31,10 @@ using System;
 using System.Diagnostics;
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -87,5 +91,15 @@ namespace PdfSharp.Pdf
         {
             writer.WriteDocString(ToString());
         }
+
+#if (NETFX_CORE || CORE)
+        /// <summary>
+        /// Writes the value in the PDF date format.
+        /// </summary>
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.WriteDocString(ToString());
+        }
+#endif
     }
 }

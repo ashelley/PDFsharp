@@ -40,6 +40,10 @@ using PdfSharp.Pdf.Filters;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.Internal;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -216,6 +220,38 @@ namespace PdfSharp.Pdf
             writer.WriteEndObject();
         }
 
+#if (NETFX_CORE || CORE)
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.WriteBeginObject(this);
+            //int count = Elements.Count;
+            PdfName[] keys = Elements.KeyNames;
+
+#if DEBUG
+            // TODO: automatically set length
+            if (_stream != null)
+                Debug.Assert(Elements.ContainsKey(PdfStream.Keys.Length), "Dictionary has a stream but no length is set.");
+#endif
+
+#if DEBUG
+            // Sort keys for debugging purposes. Comparing PDF files with for example programs like
+            // Araxis Merge is easier with sorted keys.
+            if (writer.Layout == PdfWriterLayout.Verbose)
+            {
+                List<PdfName> list = new List<PdfName>(keys);
+                list.Sort(PdfName.Comparer);
+                list.CopyTo(keys, 0);
+            }
+#endif
+
+            foreach (PdfName key in keys)
+                await WriteDictionaryElement(writer, key);
+            if (Stream != null)
+                await WriteDictionaryStream(writer);
+            await writer.WriteEndObject();
+        }
+#endif
+
         /// <summary>
         /// Writes a key/value pair of this dictionary. This function is intended to be overridden
         /// in derived classes.
@@ -239,6 +275,31 @@ namespace PdfSharp.Pdf
             writer.NewLine();
         }
 
+#if (NETFX_CORE || CORE)
+        /// <summary>
+        /// Writes a key/value pair of this dictionary. This function is intended to be overridden
+        /// in derived classes.
+        /// </summary>
+        internal virtual async Task WriteDictionaryElement(PdfAsyncWriter writer, PdfName key)
+        {
+            if (key == null)
+                throw new ArgumentNullException("key");
+            PdfItem item = Elements[key];
+#if DEBUG
+            // TODO: simplify PDFsharp
+            if (item is PdfObject && ((PdfObject)item).IsIndirect)
+            {
+                // Replace an indirect object by its Reference.
+                item = ((PdfObject)item).Reference;
+                Debug.Assert(false, "Check when we come here.");
+            }
+#endif
+            await key.WriteObjectAsync(writer);
+            await item.WriteObjectAsync(writer);
+            await writer.NewLine();
+        }
+#endif
+
         /// <summary>
         /// Writes the stream of this dictionary. This function is intended to be overridden
         /// in a derived class.
@@ -247,6 +308,17 @@ namespace PdfSharp.Pdf
         {
             writer.WriteStream(this, (writer.Options & PdfWriterOptions.OmitStream) == PdfWriterOptions.OmitStream);
         }
+
+#if (NETFX_CORE || CORE)
+        /// <summary>
+        /// Writes the stream of this dictionary. This function is intended to be overridden
+        /// in a derived class.
+        /// </summary>
+        internal virtual async Task WriteDictionaryStream(PdfAsyncWriter writer)
+        {
+            await writer.WriteStream(this, (writer.Options & PdfWriterOptions.OmitStream) == PdfWriterOptions.OmitStream);
+        }
+#endif
 
         /// <summary>
         /// Gets or sets the PDF stream belonging to this dictionary. Returns null if the dictionary has

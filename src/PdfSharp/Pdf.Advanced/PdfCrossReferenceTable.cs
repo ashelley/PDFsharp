@@ -33,6 +33,11 @@ using System.Collections;
 using System.Collections.Generic;
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
+
 namespace PdfSharp.Pdf.Advanced
 {
     /// <summary>
@@ -170,6 +175,28 @@ namespace PdfSharp.Pdf.Advanced
                 writer.WriteRaw(String.Format("{0:0000000000} {1:00000} {2} \n", iref.Position, iref.GenerationNumber, "n"));
             }
         }
+
+#if (NETFX_CORE || CORE)
+        internal async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.WriteRaw("xref\n");
+
+            PdfReference[] irefs = AllReferences;
+
+            int count = irefs.Length;
+            await writer.WriteRaw(String.Format("0 {0}\n", count + 1));
+            await writer.WriteRaw(String.Format("{0:0000000000} {1:00000} {2} \n", 0, 65535, "f"));
+            //PdfEncoders.WriteAnsi(stream, text);
+
+            for (int idx = 0; idx < count; idx++)
+            {
+                PdfReference iref = irefs[idx];
+
+                // Acrobat is very pedantic; it must be exactly 20 bytes per line.
+                await writer.WriteRaw(String.Format("{0:0000000000} {1:00000} {2} \n", iref.Position, iref.GenerationNumber, "n"));
+            }
+        }
+#endif
 
         /// <summary>
         /// Gets an array of all object identifiers. For debugging purposes only.

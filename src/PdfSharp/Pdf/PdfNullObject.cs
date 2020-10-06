@@ -29,6 +29,10 @@
 
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -70,5 +74,17 @@ namespace PdfSharp.Pdf
             writer.WriteRaw(" null ");
             writer.WriteEndObject();
         }
+
+#if (NETFX_CORE || CORE)
+        /// <summary>
+        /// Writes the keyword «null».
+        /// </summary>
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.WriteBeginObject(this);
+            await writer.WriteRaw(" null ");
+            await writer.WriteEndObject();
+        }
+#endif
     }
 }

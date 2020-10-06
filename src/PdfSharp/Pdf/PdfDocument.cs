@@ -31,7 +31,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using PdfSharp.Events;
-#if NETFX_CORE
+#if (NETFX_CORE || CORE)
 using System.Threading.Tasks;
 #endif
 using PdfSharp.Pdf.Advanced;
@@ -39,6 +39,7 @@ using PdfSharp.Pdf.Internal;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Pdf.AcroForms;
 using PdfSharp.Pdf.Security;
+
 
 // ReSharper disable ConvertPropertyToExpressionBody
 
@@ -355,6 +356,48 @@ namespace PdfSharp.Pdf
             }
         }
 
+        public async Task SaveAsync(Stream stream, bool closeStream)
+        {
+            if (!CanModify)
+                throw new InvalidOperationException(PSSR.CannotModify);
+
+            // TODO: more diagnostic checks
+            string message = "";
+            if (!CanSave(ref message))
+                throw new PdfSharpException(message);
+
+            // Get security handler if document gets encrypted.
+            PdfStandardSecurityHandler securityHandler = null;
+            if (SecuritySettings.DocumentSecurityLevel != PdfDocumentSecurityLevel.None)
+                securityHandler = SecuritySettings.SecurityHandler;
+
+            PdfAsyncWriter writer = null;
+            try
+            {
+                writer = new PdfAsyncWriter(stream, securityHandler);
+                await DoSave(writer);
+            }
+            finally
+            {
+                if (stream != null)
+                {
+                    if (closeStream)
+#if UWP
+                        stream.Dispose();
+#else
+                        stream.Close();
+#endif
+                    else
+                    {
+                        if (stream.CanRead && stream.CanSeek)
+                            stream.Position = 0; // Reset the stream position if the stream is kept open.
+                    }
+                }
+                if (writer != null)
+                    writer.Close(closeStream);
+            }
+        }
+
         /// <summary>
         /// Saves the document to the specified stream.
         /// The stream is not closed by this function.
@@ -440,6 +483,87 @@ namespace PdfSharp.Pdf
                 if (writer != null)
                 {
                     writer.Stream.Flush();
+                    // DO NOT CLOSE WRITER HERE
+                    //writer.Close();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Implements saving a PDF file asynchronously.
+        /// </summary>
+        async Task DoSave(PdfAsyncWriter writer)
+        {
+            if (_pages == null || _pages.Count == 0)
+            {
+                if (_outStream != null)
+                {
+                    // Give feedback if the wrong constructor was used.
+                    throw new InvalidOperationException("Cannot save a PDF document with no pages. Do not use \"public PdfDocument(string filename)\" or \"public PdfDocument(Stream outputStream)\" if you want to open an existing PDF document from a file or stream; use PdfReader.Open() for that purpose.");
+                }
+                throw new InvalidOperationException("Cannot save a PDF document with no pages.");
+            }
+
+            try
+            {
+                // HACK: Remove XRefTrailer
+                if (_trailer is PdfCrossReferenceStream)
+                {
+                    // HACK^2: Preserve the SecurityHandler.
+                    PdfStandardSecurityHandler securityHandler = _securitySettings.SecurityHandler;
+                    _trailer = new PdfTrailer((PdfCrossReferenceStream)_trailer);
+                    _trailer._securityHandler = securityHandler;
+                }
+
+                bool encrypt = _securitySettings.DocumentSecurityLevel != PdfDocumentSecurityLevel.None;
+                if (encrypt)
+                {
+                    PdfStandardSecurityHandler securityHandler = _securitySettings.SecurityHandler;
+                    if (securityHandler.Reference == null)
+                        _irefTable.Add(securityHandler);
+                    else
+                        Debug.Assert(_irefTable.Contains(securityHandler.ObjectID));
+                    _trailer.Elements[PdfTrailer.Keys.Encrypt] = _securitySettings.SecurityHandler.Reference;
+                }
+                else
+                    _trailer.Elements.Remove(PdfTrailer.Keys.Encrypt);
+
+                PrepareForSave();
+
+                if (encrypt)
+                    _securitySettings.SecurityHandler.PrepareEncryption();
+
+                await writer.WriteFileHeader(this);
+                PdfReference[] irefs = _irefTable.AllReferences;
+                int count = irefs.Length;
+                for (int idx = 0; idx < count; idx++)
+                {
+                    PdfReference iref = irefs[idx];
+#if DEBUG_
+                    if (iref.ObjectNumber == 378)
+                        GetType();
+#endif
+                    iref.Position = writer.Position;
+                    await iref.Value.WriteObjectAsync(writer);
+                }
+                int startxref = writer.Position;
+                await _irefTable.WriteObjectAsync(writer);
+                await writer.WriteRaw("trailer\n");
+                _trailer.Elements.SetInteger("/Size", count + 1);
+                await _trailer.WriteObjectAsync(writer);
+                await writer.WriteEof(this, startxref);
+
+                //if (encrypt)
+                //{
+                //  state &= ~DocumentState.SavingEncrypted;
+                //  //_securitySettings.SecurityHandler.EncryptDocument();
+                //}
+            }
+            finally
+            {
+                if (writer != null)
+                {
+                    await writer.Stream.FlushAsync();
                     // DO NOT CLOSE WRITER HERE
                     //writer.Close();
                 }

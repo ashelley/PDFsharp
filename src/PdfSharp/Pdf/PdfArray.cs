@@ -36,6 +36,10 @@ using System.Text;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -156,6 +160,20 @@ namespace PdfSharp.Pdf
             }
             writer.WriteEndObject();
         }
+
+#if (NETFX_CORE || CORE)
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.WriteBeginObject(this);
+            int count = Elements.Count;
+            for (int idx = 0; idx < count; idx++)
+            {
+                PdfItem value = Elements[idx];
+                await value.WriteObjectAsync(writer);
+            }
+            await writer.WriteEndObject();
+        }
+#endif
 
         /// <summary>
         /// Represents the elements of an PdfArray.

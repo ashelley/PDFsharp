@@ -30,6 +30,10 @@
 using System;
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -65,5 +69,9 @@ namespace PdfSharp.Pdf
         /// to the specified PdfWriter.
         /// </summary>
         internal abstract void WriteObject(PdfWriter writer);
+
+#if (NETFX_CORE || CORE)
+        internal abstract Task WriteObjectAsync(PdfAsyncWriter writer);
+#endif
     }
 }

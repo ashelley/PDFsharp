@@ -29,6 +29,10 @@
 
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -57,6 +61,14 @@ namespace PdfSharp.Pdf
             // Implementet because it must be overridden.
             writer.WriteRaw(" null ");
         }
+
+#if (NETFX_CORE || CORE)
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            // Implementet because it must be overridden.
+            await writer.WriteRaw(" null ");
+        }
+#endif
 
         /// <summary>
         /// The only instance of this class.

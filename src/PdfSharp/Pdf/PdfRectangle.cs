@@ -41,6 +41,11 @@ using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Pdf.Internal;
 
+
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -381,6 +386,16 @@ namespace PdfSharp.Pdf
         {
             writer.Write(this);
         }
+
+#if (NETFX_CORE || CORE)
+        /// <summary>
+        /// Writes the rectangle.
+        /// </summary>
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.Write(this);
+        }
+#endif
 
         /// <summary>
         /// Gets the DebuggerDisplayAttribute text.

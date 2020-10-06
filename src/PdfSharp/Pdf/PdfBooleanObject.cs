@@ -30,6 +30,10 @@
 using System.Diagnostics;
 using PdfSharp.Pdf.IO;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -90,5 +94,17 @@ namespace PdfSharp.Pdf
             writer.Write(_value);
             writer.WriteEndObject();
         }
+
+#if (NETFX_CORE || CORE)
+        /// <summary>
+        /// Writes the keyword «false» or «true».
+        /// </summary>
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.WriteBeginObject(this);
+            await writer.Write(_value);
+            await writer.WriteEndObject();
+        }
     }
+#endif
 }

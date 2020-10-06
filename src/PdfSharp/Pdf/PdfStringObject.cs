@@ -31,6 +31,10 @@ using System.Diagnostics;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Pdf.Internal;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     /// <summary>
@@ -145,5 +149,17 @@ namespace PdfSharp.Pdf
             writer.Write(new PdfString(_value, _flags));
             writer.WriteEndObject();
         }
+
+#if (NETFX_CORE || CORE)
+        /// <summary>
+        /// Writes the string literal with encoding DOCEncoded.
+        /// </summary>
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.WriteBeginObject(this);
+            await writer.Write(new PdfString(_value, _flags));
+            await writer.WriteEndObject();
+        }
     }
+#endif
 }

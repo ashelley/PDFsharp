@@ -33,6 +33,10 @@ using System.Text;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Pdf.Internal;
 
+#if (NETFX_CORE || CORE)
+using System.Threading.Tasks;
+#endif
+
 namespace PdfSharp.Pdf
 {
     // TODO: Make code more readeable with PDF 1.7 strings: text string, ASCII string, byte string etc.
@@ -325,5 +329,15 @@ namespace PdfSharp.Pdf
         {
             writer.Write(this);
         }
+
+#if (NETFX_CORE || CORE)
+        /// <summary>
+        /// Writes the string DocEncoded.
+        /// </summary>
+        internal override async Task WriteObjectAsync(PdfAsyncWriter writer)
+        {
+            await writer.Write(this);
+        }
     }
+#endif
 }
