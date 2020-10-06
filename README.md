@@ -1,3 +1,48 @@
+# ASP.NET Core PDFSharp
+
+
+## ASP.NET Core 2.2
+
+**NOTE: It appears that as of ASP.NET Core 2.2, PDFSharp (for .NET 4.6.1) simply works and none of this is required any longer. Just add the PDFSharp Nuget package to your project. Done. (It's great when Microsoft catches up with the promises made with ASP.NET Core/NETStandard.)**
+
+**UPDATE 9/29/2019** PDFSharp .NET 4.6.1 only works with ASP.NET Core 2.2 on Windows "out of the box". On Linux or a Linux Docker container, it does not work. At this point I give up as this is a minor part of my app and I can just display the invoice as a simple (HTML) page. The error on Linux is "Unable to load shared library 'user32.dll' or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: libuser32.dll: cannot open shared object file: No such file or directory". 
+Using the PDFsharp-.netcoreapp2.0 might actually work on Linux, but I'm tired of chasing workarounds, so I'll just go with the plain HTML page (for invoices).
+
+
+So I really needed PDFSharp for netcoreapp2.0 (or netstandard2.0), but the current release version 1.32.3057 and the prerelease version 1.50.4845-RC2a 
+did not support ASP.NET Core, nor would they magically work.
+
+I looked for alternatives (around April 20, 2018), but there was nothing out there. Rolling my own could have been an option, 
+but I really wasn't looking forward to that. Why reinvent the wheel. But I needed netcoreapp2.0 support.
+
+Fortunately, it took a mere 20 minutes to fix this. Here are the steps to add PDFSharp to a netcoreapp2.0 project.
+
+It may not be pretty, but it works. If you're just using PDFSharp to render a PDF, this should work for you too.
+This is obviously a stop-gap solution, until the fine folks at Empira Software GmbH (the makers of PDFSharp) catch up.
+
+## Step By Step
+
+- Clone this repo
+- Open the solution file BuildAll-PdfSharp.sln (you'll need the SDK, etc, but if you need PDFSharp for netcoreapp2.0, you have it already)
+- Rebuild all, you probably want a Release build
+- In the project where you need PDFSharp (an netcoreapp2.0 project), add the following to you csproj. Make sure to adjust the path and Debug/Release as needed:
+
+```
+  <ItemGroup>
+    <Reference Include="PdfSharp.netcoreapp">
+      <HintPath>..\..\..\..\PDFSharp.netcoreapp\src\PdfSharp\bin\Debug\netcoreapp2.0\PdfSharp.netcoreapp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+```
+
+- Build your project
+- Run it and rejoice 
+- Send beer money to me
+
+If it doesn't work, sorry.
+
+** Original Readme Text Below **
+
 # PDFsharp
 A .NET library for processing PDF
 
